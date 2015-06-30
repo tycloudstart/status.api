@@ -1,0 +1,12 @@
+{
+    "http": {
+        "enable": true,
+        "listen": "0.0.0.0:19001"
+    },
+    "judge": {
+        "enable": true,
+        "cluster": {
+            "judge-00" : "127.0.0.1:6080"
+        }
+    }
+}

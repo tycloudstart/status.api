@@ -1,0 +1,85 @@
+#!/bin/bash
+## test home
+testdir=$(cd $(dirname $0)/; pwd)
+## word home
+workdir=$(dirname $testdir)
+cd $workdir
+
+module=status.api
+app=tycs-$module
+pidfile=var/app.pid
+logfile=var/app.log
+control=./control
+httpprex="127.0.0.1:19001"
+
+## counter
+function counter(){
+    curl -s "$httpprex/counter/all" | python -m json.tool
+}
+
+## api
+function query_status(){
+    u="e_1986"
+    e="test.endpoint" 
+    c="test.metric/t0=tag0,t1=tag1"
+    curl -s "$httpprex/api/judge/status/$u/$e/$c" | python -m json.tool
+}
+
+function query_statuses(){
+    u="e_1986"
+    e="test.endpoint" 
+    c="test.metric/t0=tag0,t1=tag1"
+
+    u1="e_1987"
+    e1="test.endpoint" 
+    c1="test.metric/t2=tag2"
+
+    curl -s -X POST -d "[{\"uuid\":\"$u\",\"endpoint\":\"$e\",\"counter\":\"$c\"}, {\"uuid\":\"$u1\",\"endpoint\":\"$e1\",\"counter\":\"$c1\"}]"  "$httpprex/api/judge/statuses" | python -m json.tool
+}
+
+## tail
+function tail_log(){
+    $control tail
+}
+
+## build
+function build(){
+    $control build
+    [ $? -eq 0 ] && echo -e "build ok" || { echo -e "build error"; exit 1; }
+}
+function start(){
+    $control start
+}
+function stop(){
+    $control stop
+}
+
+
+action=$1
+case $action in
+    "build")
+        build
+        ;;
+    "start")
+        start
+        ;;
+    "stop")
+        stop
+        ;;
+    "restart")
+        stop && build && start
+        ;;
+    "tail")
+        tail_log
+        ;;
+    "status")
+        query_status
+        ;;
+    "statuses")
+        query_statuses
+        ;;
+    *)
+        counter
+        ;;
+esac
+
